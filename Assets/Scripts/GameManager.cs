@@ -5,9 +5,6 @@ public class GameManager : MonoBehaviour
     public Camera mainCam;
     public SudokuBoard board;
 
-    public Material normalMat;
-    public Material selectedMat;
-    public Material errMat;
 
     private SudokuCell selectedCell;
 
@@ -23,7 +20,7 @@ public class GameManager : MonoBehaviour
         {
             if (selectedCell != null)
             {
-                selectedCell.SetMaterial(normalMat);
+                board.MarkDeselectedCell(selectedCell.GetX(), selectedCell.GetY());
                 selectedCell = null;
             }
             Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
@@ -33,7 +30,7 @@ public class GameManager : MonoBehaviour
                 if (hit.collider.CompareTag("Cell"))
                 {
                     selectedCell = hit.collider.gameObject.GetComponent<SudokuCell>();
-                    selectedCell.SetMaterial(selectedMat);
+                    board.MarkSelectedCell(selectedCell.GetX(), selectedCell.GetY());
                     Debug.Log($"Cell ({selectedCell.GetX()}, {selectedCell.GetY()}) selected");
                 }
             }

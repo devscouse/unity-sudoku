@@ -1,4 +1,5 @@
 using System;
+using Unity.VisualScripting;
 using UnityEngine;
 
 public class SudokuBoard : MonoBehaviour
@@ -6,9 +7,16 @@ public class SudokuBoard : MonoBehaviour
     public float minorPadding;
     public float majorPadding;
     public GameObject cellPrefab;
+
+    [Header("Sudoku Cell Materials")]
+    public Material normalMat;
+    public Material selectedMat;
+    public Material errMat;
+
     private GameObject[,] cells;
     private int[,] values;
     private SudokuSolver solver;
+    private SudokuRules rules;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -53,8 +61,7 @@ public class SudokuBoard : MonoBehaviour
         }
 
         solver = GetComponent<SudokuSolver>();
-
-
+        rules = new SudokuRules(values);
     }
 
     public void Solve()
@@ -79,8 +86,22 @@ public class SudokuBoard : MonoBehaviour
         return cells[x, y].GetComponent<SudokuCell>();
     }
 
+    public void MarkSelectedCell(int x, int y)
+    {
+        GetSudokuCell(x, y).SetMaterial(selectedMat);
+    }
+
+    public void MarkDeselectedCell(int x, int y)
+    {
+        GetSudokuCell(x, y).SetMaterial(normalMat);
+    }
+
     public void SetValue(int x, int y, int value)
     {
+        if (!rules.PlacementIsValid(x, y, value))
+        {
+            GetSudokuCell(x, y).SetMaterial(errMat);
+        }
         values[x, y] = value;
         GetSudokuCell(x, y).SetLabel(value.ToString());
     }
