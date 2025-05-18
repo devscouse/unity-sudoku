@@ -17,6 +17,7 @@ public class SudokuBoard : MonoBehaviour
     private int[,] values;
     private SudokuSolver solver;
     private SudokuRules rules;
+    private Vector2Int selectedCell;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -81,14 +82,65 @@ public class SudokuBoard : MonoBehaviour
         }
     }
 
+    SudokuCell[] GetSudokuCellRow(int y)
+    {
+        SudokuCell[] row = new SudokuCell[9];
+        for (int x = 0; x < 9; x++)
+        {
+            row[x] = GetSudokuCell(x, y);
+        }
+        return row;
+    }
+
+    SudokuCell[] GetSudokuCellCol(int x)
+    {
+        SudokuCell[] col = new SudokuCell[9];
+        for (int y = 0; y < 9; y++)
+        {
+            col[y] = GetSudokuCell(x, y);
+        }
+        return col;
+    }
+
+    SudokuCell[] GetSudokuCellSquare(int x, int y)
+    {
+        SudokuCell[] square = new SudokuCell[9];
+        int gridX = (x / 3) * 3;
+        int gridY = (y / 3) * 3;
+        int i = 0;
+        for (int dx = 0; dx < 3; dx++)
+        {
+            for (int dy = 0; dy < 3; dy++)
+            {
+                int x2 = gridX + dx;
+                int y2 = gridY + dy;
+                square[i++] = GetSudokuCell(x2, y2);
+            }
+        }
+        return square;
+    }
+
     SudokuCell GetSudokuCell(int x, int y)
     {
         return cells[x, y].GetComponent<SudokuCell>();
     }
 
-    public void MarkSelectedCell(int x, int y)
+    SudokuCell[,] GetSudokuCells()
     {
-        GetSudokuCell(x, y).SetMaterial(selectedMat);
+        SudokuCell[,] allCells = new SudokuCell[9, 9];
+        for (int x = 0; x < 9; x++)
+        {
+            for (int y = 0; y < 9; y++)
+            {
+                allCells[x, y] = GetSudokuCell(x, y);
+            }
+        }
+        return allCells;
+    }
+
+    public void SetSelectedCell(int x, int y)
+    {
+        selectedCell = new Vector2Int(x, y);
     }
 
     public void MarkDeselectedCell(int x, int y)
@@ -98,20 +150,49 @@ public class SudokuBoard : MonoBehaviour
 
     public void SetValue(int x, int y, int value)
     {
-        if (!rules.PlacementIsValid(x, y, value))
-        {
-            GetSudokuCell(x, y).SetMaterial(errMat);
-        }
         values[x, y] = value;
-        GetSudokuCell(x, y).SetLabel(value.ToString());
-    }
-
-    public void WipeValue(int x, int y)
-    {
-        values[x, y] = 0;
-        GetSudokuCell(x, y).SetLabel("");
+        if (value == 0)
+        {
+            GetSudokuCell(x, y).SetLabel("");
+        }
+        else
+        {
+            GetSudokuCell(x, y).SetLabel(value.ToString());
+        }
     }
 
     public int GetValue(int x, int y) { return values[x, y]; }
     public int[,] GetValues() { return values; }
+
+    public void CheckBoardForErrors()
+    {
+        foreach (SudokuCell cell in GetSudokuCells()) { cell.SetMaterial(normalMat); }
+        for (int i = 0; i < 9; i++)
+        {
+            if (!rules.RowIsValid(i))
+            {
+                foreach (SudokuCell cell in GetSudokuCellRow(i)) { cell.SetMaterial(errMat); }
+            }
+            if (!rules.ColIsValid(i))
+            {
+                foreach (SudokuCell cell in GetSudokuCellCol(i)) { cell.SetMaterial(errMat); }
+            }
+        }
+
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                if (!rules.SquareIsValid(i * 3, j * 3))
+                {
+                    foreach (SudokuCell cell in GetSudokuCellSquare(i * 3, j * 3)) { cell.SetMaterial(errMat); }
+                }
+            }
+        }
+    }
+    void Update()
+    {
+        CheckBoardForErrors();
+        GetSudokuCell(selectedCell.x, selectedCell.y).SetMaterial(selectedMat);
+    }
 }
