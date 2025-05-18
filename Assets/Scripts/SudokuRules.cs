@@ -118,4 +118,33 @@ class SudokuRules
             && PlacementIsValidInRow(x, y, value)
             && PlacementIsValidInSquare(x, y, value));
     }
+
+    public bool IsFilled()
+    {
+        foreach (int value in board)
+        {
+            if (value == 0) { return false; }
+        }
+        return true;
+    }
+
+    public bool IsValid()
+    {
+        for (int i = 0; i < 9; i++)
+        {
+            if (!RowIsValid(i)) { return false; }
+            if (!ColIsValid(i)) { return false; }
+        }
+
+        for (int i = 0; i < 3; i++)
+        {
+            for (int j = 0; j < 3; j++)
+            {
+                if (!SquareIsValid(i * 3, j * 3)) { return false; }
+            }
+        }
+        return true;
+    }
+
+    public bool IsSolved() { return IsFilled() && IsValid(); }
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -15,7 +16,6 @@ public class SudokuBoard : MonoBehaviour
 
     private GameObject[,] cells;
     private int[,] values;
-    private SudokuSolver solver;
     private SudokuRules rules;
     private Vector2Int selectedCell;
 
@@ -61,25 +61,20 @@ public class SudokuBoard : MonoBehaviour
             }
         }
 
-        solver = GetComponent<SudokuSolver>();
         rules = new SudokuRules(values);
     }
 
+    public IEnumerator Solver()
+    {
+        float t1 = Time.time;
+        SudokuSolver solver = new SudokuSolver(values);
+        yield return solver.Solve();
+        float runtime = Time.time - t1;
+        Debug.Log($"{solver.nSolutions} distinct solutions found in {runtime} seconds");
+    }
     public void Solve()
     {
-        solver.CopyBoardToWorkspace(values);
-        if (solver.Solve())
-        {
-            Debug.Log("Board can be solved!");
-            int[,] solution = solver.GetSolution();
-            for (int x = 0; x < 9; x++)
-            {
-                for (int y = 0; y < 9; y++)
-                {
-                    SetValue(x, y, solution[x, y]);
-                }
-            }
-        }
+        StartCoroutine(Solver());
     }
 
     SudokuCell[] GetSudokuCellRow(int y)
@@ -164,17 +159,20 @@ public class SudokuBoard : MonoBehaviour
     public int GetValue(int x, int y) { return values[x, y]; }
     public int[,] GetValues() { return values; }
 
-    public void CheckBoardForErrors()
+    public bool CheckBoardForErrors()
     {
+        bool result = false;
         foreach (SudokuCell cell in GetSudokuCells()) { cell.SetMaterial(normalMat); }
         for (int i = 0; i < 9; i++)
         {
             if (!rules.RowIsValid(i))
             {
+                result = true;
                 foreach (SudokuCell cell in GetSudokuCellRow(i)) { cell.SetMaterial(errMat); }
             }
             if (!rules.ColIsValid(i))
             {
+                result = true;
                 foreach (SudokuCell cell in GetSudokuCellCol(i)) { cell.SetMaterial(errMat); }
             }
         }
@@ -185,10 +183,12 @@ public class SudokuBoard : MonoBehaviour
             {
                 if (!rules.SquareIsValid(i * 3, j * 3))
                 {
+                    result = true;
                     foreach (SudokuCell cell in GetSudokuCellSquare(i * 3, j * 3)) { cell.SetMaterial(errMat); }
                 }
             }
         }
+        return result;
     }
     void Update()
     {

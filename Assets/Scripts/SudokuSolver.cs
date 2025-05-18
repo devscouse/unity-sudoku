@@ -1,19 +1,18 @@
-using System;
+using System.Collections;
 using UnityEngine;
 
-public class SudokuSolver : MonoBehaviour
+public class SudokuSolver
 {
-    private int[,] workspace;
+    public int nSolutions;
+    public int[,] solution;
+    public int[,] workspace;
     private SudokuRules rules;
 
-    void Start()
+    public SudokuSolver(int[,] values)
     {
+        nSolutions = 0;
+        solution = new int[9, 9];
         workspace = new int[9, 9];
-        rules = new SudokuRules(workspace);
-    }
-
-    public void CopyBoardToWorkspace(int[,] values)
-    {
         for (int x = 0; x < 9; x++)
         {
             for (int y = 0; y < 9; y++)
@@ -21,38 +20,52 @@ public class SudokuSolver : MonoBehaviour
                 workspace[x, y] = values[x, y];
             }
         }
+        rules = new SudokuRules(workspace);
+    }
+
+    void SaveWorkspaceAsSolution()
+    {
+        for (int x = 0; x < 9; x++)
+        {
+            for (int y = 0; y < 9; y++)
+            {
+                solution[x, y] = workspace[x, y];
+            }
+        }
+
     }
 
 
-    public bool Solve()
+    public IEnumerator Solve()
     {
         for (int x = 0; x < 9; x++)
         {
             for (int y = 0; y < 9; y++)
             {
                 if (workspace[x, y] != 0) { continue; }
-                for (int value = 1; value < 10; value++)
+                for (int val = 1; val < 10; val++)
                 {
-                    if (rules.PlacementIsValid(x, y, value))
-                    {
-                        Debug.Log($"Trying {value} in position ({x}, {y})");
-                        workspace[x, y] = value;
-                        if (Solve())
-                        {
-                            return true;
-                        }
-                        workspace[x, y] = 0;
+                    if (!rules.PlacementIsValid(x, y, val)) { continue; }
 
+                    // Try value in this position
+                    workspace[x, y] = val;
+
+                    // Check if the maze was solved by placing this value
+                    // if it was increment our solution count by 1
+                    if (rules.IsSolved())
+                    {
+                        nSolutions += 1;
+                        SaveWorkspaceAsSolution();
+                        Debug.Log($"Found solution! ({nSolutions} so far)");
                     }
+
+                    yield return Solve();
+                    workspace[x, y] = 0;
                 }
-                return false;
+                yield break;
             }
         }
-        return false;
+
     }
 
-    public int[,] GetSolution()
-    {
-        return workspace;
-    }
 }
