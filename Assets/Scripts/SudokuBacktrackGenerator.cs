@@ -9,6 +9,7 @@ class SudokuBacktrackGenerator
     public int[,] solution;
     public int[,] problem;
     private bool finished;
+    private List<int> requiredClueCache;
     private SudokuRules solutionRules;
     private SudokuBacktrackSolver solver;
 
@@ -17,6 +18,7 @@ class SudokuBacktrackGenerator
         solution = new int[9, 9];
         problem = new int[9, 9];
         solutionRules = new SudokuRules(solution);
+        requiredClueCache = new List<int>();
     }
 
     void CopySolutionToProblem()
@@ -60,6 +62,11 @@ class SudokuBacktrackGenerator
         }
     }
 
+    int hashXY(int x, int y)
+    {
+        return x * 9 + y;
+    }
+
     IEnumerator RemoveClue()
     {
         List<int> xValues = Enumerable.Range(0, 9).ToList();
@@ -73,13 +80,18 @@ class SudokuBacktrackGenerator
             foreach (int y in yValues)
             {
                 if (problem[x, y] == 0) { continue; }
+                int posHash = hashXY(x, y);
+
+                if (requiredClueCache.Contains(posHash)) { continue; }
                 int value = problem[x, y];
                 problem[x, y] = 0;
                 solver = new SudokuBacktrackSolver(problem);
                 yield return solver.Solve();
+
                 if (solver.nSolutions > 1)
                 {
                     Debug.Log($"Cannot remove {x}, {y}");
+                    requiredClueCache.Add(posHash);
                     problem[x, y] = value;
                 }
                 else { yield break; }
@@ -89,8 +101,11 @@ class SudokuBacktrackGenerator
         finished = true;
     }
 
+
     public IEnumerator Generate()
     {
+        float t1 = Time.time;
+        requiredClueCache = new List<int>();
         finished = false;
         yield return GenerateSolution();
         CopySolutionToProblem();
@@ -99,5 +114,7 @@ class SudokuBacktrackGenerator
         {
             yield return RemoveClue();
         }
+
+        Debug.Log($"Generated hardest possible puzzle in {Time.time - t1} seconds");
     }
 }
