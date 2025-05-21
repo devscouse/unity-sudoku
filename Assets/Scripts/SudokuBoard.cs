@@ -17,10 +17,10 @@ public class SudokuBoard : MonoBehaviour
     private GameObject[,] cells;
     private int[,] values;
     private SudokuRules rules;
+    private SudokuBacktrackGenerator generator;
     private Vector2Int selectedCell;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    void InstantiateCells()
     {
         cells = new GameObject[9, 9];
         values = new int[9, 9];
@@ -40,34 +40,29 @@ public class SudokuBoard : MonoBehaviour
                 cells[x, y] = cell;
 
                 yPos += cellSize;
-                if ((y + 1) % 3 == 0)
-                {
-                    yPos += majorPadding;
-                }
-                else
-                {
-                    yPos += minorPadding;
-                }
+                if ((y + 1) % 3 == 0) { yPos += majorPadding; }
+                else { yPos += minorPadding; }
                 values[x, y] = 0;
             }
             xPos += cellSize;
-            if ((x + 1) % 3 == 0)
-            {
-                xPos += majorPadding;
-            }
-            else
-            {
-                xPos += minorPadding;
-            }
+            if ((x + 1) % 3 == 0) { xPos += majorPadding; }
+            else { xPos += minorPadding; }
         }
+        generator = new SudokuBacktrackGenerator();
+        StartCoroutine(generator.Generate());
+    }
 
+    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    void Start()
+    {
+        InstantiateCells();
         rules = new SudokuRules(values);
     }
 
     public IEnumerator Solver()
     {
         float t1 = Time.time;
-        SudokuSolver solver = new SudokuSolver(values);
+        SudokuBacktrackSolver solver = new SudokuBacktrackSolver(values);
         yield return solver.Solve();
         float runtime = Time.time - t1;
         Debug.Log($"{solver.nSolutions} distinct solutions found in {runtime} seconds");
@@ -138,11 +133,6 @@ public class SudokuBoard : MonoBehaviour
         selectedCell = new Vector2Int(x, y);
     }
 
-    public void MarkDeselectedCell(int x, int y)
-    {
-        GetSudokuCell(x, y).SetMaterial(normalMat);
-    }
-
     public void SetValue(int x, int y, int value)
     {
         values[x, y] = value;
@@ -194,5 +184,13 @@ public class SudokuBoard : MonoBehaviour
     {
         CheckBoardForErrors();
         GetSudokuCell(selectedCell.x, selectedCell.y).SetMaterial(selectedMat);
+
+        for (int x = 0; x < 9; x++)
+        {
+            for (int y = 0; y < 9; y++)
+            {
+                SetValue(x, y, generator.problem[x, y]);
+            }
+        }
     }
 }

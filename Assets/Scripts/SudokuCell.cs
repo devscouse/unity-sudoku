@@ -11,7 +11,7 @@ public class SudokuCell : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-        label = GetComponentInChildren<TextMeshProUGUI>();
+        label = transform.Find("Canvas/Label").GetComponent<TextMeshProUGUI>();
     }
 
     public void SetMaterial(Material mat)
@@ -22,12 +22,31 @@ public class SudokuCell : MonoBehaviour
 
     public void SetLabel(String text)
     {
+        if (text != "")
+        {
+            for (int value = 1; value < 10; value++)
+                SetNoteInactive(value);
+        }
         label.text = text;
     }
 
     public String GetLabel()
     {
         return label.text;
+    }
+
+    public void SetNoteInactive(int value)
+    {
+        if (value == 0)
+            return;
+        transform.Find($"Canvas/Notes{value}").gameObject.SetActive(false);
+    }
+
+    public void SetNoteActive(int value)
+    {
+        if (value == 0)
+            return;
+        transform.Find($"Canvas/Notes{value}").gameObject.SetActive(true);
     }
 
     public void SetX(int x) { this.x = x; }

@@ -1,14 +1,14 @@
 using System.Collections;
 using UnityEngine;
 
-public class SudokuSolver
+public class SudokuBacktrackSolver
 {
     public int nSolutions;
     public int[,] solution;
     public int[,] workspace;
     private SudokuRules rules;
 
-    public SudokuSolver(int[,] values)
+    public SudokuBacktrackSolver(int[,] values)
     {
         nSolutions = 0;
         solution = new int[9, 9];
@@ -50,22 +50,25 @@ public class SudokuSolver
                     // Try value in this position
                     workspace[x, y] = val;
 
+                    yield return Solve();
+
                     // Check if the maze was solved by placing this value
                     // if it was increment our solution count by 1
                     if (rules.IsSolved())
                     {
                         nSolutions += 1;
+                        if (nSolutions > 1)
+                        {
+                            Debug.Log("2 solutions found, quitting early");
+                            yield break;
+                        }
                         SaveWorkspaceAsSolution();
-                        Debug.Log($"Found solution! ({nSolutions} so far)");
                     }
-
-                    yield return Solve();
                     workspace[x, y] = 0;
                 }
                 yield break;
             }
         }
-
     }
 
 }
