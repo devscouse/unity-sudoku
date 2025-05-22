@@ -67,4 +67,7 @@ class SudokuValues
     {
         return GetValuesFromPositions(GetSquarePositions(x, y));
     }
+
+    public int GetValue(int x, int y) { return values[x, y]; }
+    public void SetValue(int x, int y, int value) { values[x, y] = value; }
 }

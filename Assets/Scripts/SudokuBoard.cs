@@ -18,6 +18,7 @@ public class SudokuBoard : MonoBehaviour
     private int[,] values;
     private SudokuRules rules;
     private SudokuBacktrackGenerator generator;
+    private SudokuCspSolver solver;
     private Vector2Int selectedCell;
 
     void InstantiateCells()
@@ -49,7 +50,8 @@ public class SudokuBoard : MonoBehaviour
             else { xPos += minorPadding; }
         }
         generator = new SudokuBacktrackGenerator();
-        StartCoroutine(generator.Generate());
+        solver = new SudokuCspSolver(values);
+        // StartCoroutine(generator.Generate());
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -62,7 +64,6 @@ public class SudokuBoard : MonoBehaviour
     public IEnumerator Solver()
     {
         float t1 = Time.time;
-        SudokuBacktrackSolver solver = new SudokuBacktrackSolver(values);
         yield return solver.Solve();
         float runtime = Time.time - t1;
         Debug.Log($"{solver.nSolutions} distinct solutions found in {runtime} seconds");
@@ -189,7 +190,11 @@ public class SudokuBoard : MonoBehaviour
         {
             for (int y = 0; y < 9; y++)
             {
-                SetValue(x, y, generator.problem[x, y]);
+                for (int v = 1; v < 10; v++)
+                    GetSudokuCell(x, y).SetNoteInactive(v);
+                foreach (int val in solver.constraints.GetDomainValues(x, y))
+                    GetSudokuCell(x, y).SetNoteActive(val);
+                SetValue(x, y, solver.workspace[x, y]);
             }
         }
     }
