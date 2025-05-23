@@ -18,7 +18,7 @@ public class SudokuBoard : MonoBehaviour
     private GameObject[,] cells;
     private int[,] values;
     private SudokuRules rules;
-    private SudokuBacktrackGenerator generator;
+    private SudokuGenerator generator;
     private SudokuCspSolver solver;
     private Vector2Int selectedCell;
 
@@ -57,40 +57,7 @@ public class SudokuBoard : MonoBehaviour
     {
         InstantiateCells();
         rules = new SudokuRules(values);
-
-
-        generator = new SudokuBacktrackGenerator();
-        solver = new SudokuCspSolver(values);
-        StartCoroutine(generator.Generate());
-    }
-
-    public void LoadPuzzle()
-    {
-        SetValue(0, 0, 9);
-        SetValue(1, 0, 2);
-        SetValue(2, 0, 6);
-        SetValue(7, 1, 8);
-        SetValue(0, 2, 3);
-        SetValue(3, 3, 1);
-        SetValue(0, 4, 7);
-        SetValue(1, 4, 5);
-        SetValue(4, 4, 2);
-        SetValue(6, 4, 9);
-        SetValue(2, 5, 3);
-        SetValue(3, 5, 5);
-        SetValue(4, 5, 6);
-        SetValue(7, 5, 1);
-        SetValue(0, 6, 2);
-        SetValue(3, 6, 4);
-        SetValue(4, 6, 1);
-        SetValue(6, 6, 5);
-        SetValue(8, 6, 7);
-        SetValue(8, 7, 4);
-        SetValue(2, 8, 5);
-        SetValue(3, 8, 6);
-        SetValue(4, 8, 8);
-        SetValue(8, 8, 3);
-        solver = new SudokuCspSolver(values);
+        generator = new SudokuGenerator();
     }
 
     public IEnumerator Solver()
@@ -102,7 +69,26 @@ public class SudokuBoard : MonoBehaviour
     }
     public void Solve()
     {
+        solver = new SudokuCspSolver(values);
         StartCoroutine(Solver());
+    }
+
+    public IEnumerator Generator()
+    {
+        yield return generator.Generate();
+        for (int x = 0; x < 9; x++)
+        {
+            for (int y = 0; y < 9; y++)
+            {
+                if (generator.problem[x, y] == 0) { continue; }
+                SetClue(x, y, generator.problem[x, y]);
+            }
+        }
+    }
+
+    public void Generate()
+    {
+        StartCoroutine(Generator());
     }
 
     SudokuCell[] GetSudokuCellRow(int y)
@@ -166,26 +152,38 @@ public class SudokuBoard : MonoBehaviour
         selectedCell = new Vector2Int(x, y);
     }
 
-    public void SetValue(int x, int y, int value)
+    public void SetClue(int x, int y, int value)
     {
         values[x, y] = value;
-        if (value == 0)
+        SetValue(x, y, value);
+        GetSudokuCell(x, y).isClue = true;
+    }
+
+    public void SetValue(int x, int y, int value)
+    {
+        SudokuCell cell = GetSudokuCell(x, y);
+        if (cell.isClue)
         {
-            GetSudokuCell(x, y).SetLabel("");
+            Debug.LogWarning("Invalid attempt to set the value of a clue cell");
+            return;
         }
-        else
-        {
-            GetSudokuCell(x, y).SetLabel(value.ToString());
-        }
+        values[x, y] = value;
+        if (value == 0) { cell.SetLabel(""); }
+        else { cell.SetLabel(value.ToString()); }
     }
 
     public int GetValue(int x, int y) { return values[x, y]; }
     public int[,] GetValues() { return values; }
 
+
     public bool CheckBoardForErrors()
     {
         bool result = false;
-        foreach (SudokuCell cell in GetSudokuCells()) { cell.SetMaterial(normalMat); }
+        foreach (SudokuCell cell in GetSudokuCells())
+        {
+            if (!cell.isClue) { cell.SetMaterial(normalMat); }
+            else { cell.SetMaterial(clueMat); }
+        }
         for (int i = 0; i < 9; i++)
         {
             if (!rules.RowIsValid(i))
@@ -217,14 +215,5 @@ public class SudokuBoard : MonoBehaviour
     {
         CheckBoardForErrors();
         GetSudokuCell(selectedCell.x, selectedCell.y).SetMaterial(selectedMat);
-
-        for (int x = 0; x < 9; x++)
-        {
-            for (int y = 0; y < 9; y++)
-            {
-                SetValue(x, y, generator.problem[x, y]);
-            }
-        }
-
     }
 }
