@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -17,7 +18,7 @@ class SudokuCspSolver
         workspace = new int[9, 9];
         for (int x = 0; x < 9; x++)
         {
-            for (int y = 0; y < 0; y++)
+            for (int y = 0; y < 9; y++)
             {
                 workspace[x, y] = values[x, y];
             }
@@ -26,6 +27,7 @@ class SudokuCspSolver
         workspaceRules = new SudokuRules(workspace);
         constraints = new SudokuConstraints(workspaceValues);
     }
+
 
     public IEnumerator Solve()
     {
@@ -41,10 +43,11 @@ class SudokuCspSolver
             }
         }
         finished = false;
-        // yield return new WaitForSeconds(0.1f);
         if (!constraints.AllEmptyPositionsHavePlaceableValues() || workspaceRules.IsFilled()) { yield break; }
+
         Pos pos = constraints.GetEmptyPosWithLeastConstraints();
         List<int> placeableValues = constraints.GetDomainValues(pos.X, pos.Y);
+        Debug.Log($"{pos.X}, {pos.Y} has the smallest domain: {String.Join(" ", placeableValues)}");
 
         foreach (int value in placeableValues)
         {
@@ -56,10 +59,7 @@ class SudokuCspSolver
             workspace[pos.X, pos.Y] = value;
             constraints.SetValue(pos.X, pos.Y, value);
             yield return Solve();
-            if (finished)
-            {
-                yield break;
-            }
+            if (finished) { yield break; }
             constraints.WipeValue(pos.X, pos.Y);
             workspace[pos.X, pos.Y] = 0;
         }

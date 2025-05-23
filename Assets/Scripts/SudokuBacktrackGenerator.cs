@@ -11,7 +11,7 @@ class SudokuBacktrackGenerator
     private bool finished;
     private List<int> requiredClueCache;
     private SudokuRules solutionRules;
-    private SudokuBacktrackSolver solver;
+    private SudokuCspSolver solver;
 
     public SudokuBacktrackGenerator()
     {
@@ -75,6 +75,7 @@ class SudokuBacktrackGenerator
         List<int> yValues = Enumerable.Range(0, 9).ToList();
         yValues = yValues.OrderBy(x => Guid.NewGuid()).ToList();
 
+
         foreach (int x in xValues)
         {
             foreach (int y in yValues)
@@ -85,7 +86,7 @@ class SudokuBacktrackGenerator
                 if (requiredClueCache.Contains(posHash)) { continue; }
                 int value = problem[x, y];
                 problem[x, y] = 0;
-                solver = new SudokuBacktrackSolver(problem);
+                solver = new SudokuCspSolver(problem);
                 yield return solver.Solve();
 
                 if (solver.nSolutions > 1)

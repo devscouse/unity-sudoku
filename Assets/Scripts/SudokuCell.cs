@@ -7,6 +7,7 @@ public class SudokuCell : MonoBehaviour
     private TextMeshProUGUI label;
     private int x;
     private int y;
+    public bool isClue = false;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -20,7 +21,7 @@ public class SudokuCell : MonoBehaviour
         rend.material = mat;
     }
 
-    public void SetLabel(String text)
+    public void SetLabel(string text)
     {
         if (text != "")
         {
@@ -30,7 +31,7 @@ public class SudokuCell : MonoBehaviour
         label.text = text;
     }
 
-    public String GetLabel()
+    public string GetLabel()
     {
         return label.text;
     }

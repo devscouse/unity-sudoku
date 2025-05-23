@@ -57,7 +57,8 @@ class SudokuConstraints
 
     void ReCalculateDomain(int x, int y)
     {
-        domains[x, y] = 0;
+        if (values.GetValue(x, y) != 0) { return; }
+        for (int value = 1; value < 10; value++) { AddValueToDomain(x, y, value); }
         foreach (int value in values.GetCol(x)) { RemoveValueFromDomain(x, y, value); }
         foreach (int value in values.GetRow(y)) { RemoveValueFromDomain(x, y, value); }
         foreach (int value in values.GetSquare(x, y)) { RemoveValueFromDomain(x, y, value); }
@@ -73,10 +74,10 @@ class SudokuConstraints
 
     public void WipeValue(int x, int y)
     {
-        int currValue = values.GetValue(x, y);
-        foreach (Pos pos in values.GetColPositions(x)) { AddValueToDomain(pos.X, pos.Y, currValue); }
-        foreach (Pos pos in values.GetRowPositions(y)) { AddValueToDomain(pos.X, pos.Y, currValue); }
-        foreach (Pos pos in values.GetSquarePositions(x, y)) { AddValueToDomain(pos.X, pos.Y, currValue); }
+        values.SetValue(x, y, 0);
+        foreach (Pos pos in values.GetColPositions(x)) { ReCalculateDomain(pos.X, pos.Y); }
+        foreach (Pos pos in values.GetRowPositions(y)) { ReCalculateDomain(pos.X, pos.Y); }
+        foreach (Pos pos in values.GetSquarePositions(x, y)) { ReCalculateDomain(pos.X, pos.Y); }
         ReCalculateDomain(x, y);
     }
 
@@ -108,7 +109,6 @@ class SudokuConstraints
                 }
             }
         }
-        Debug.Log($"Position {pos.X}, {pos.Y} has smallest domain: {leastValues}");
         return pos;
     }
 

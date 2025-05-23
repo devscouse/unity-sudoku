@@ -13,6 +13,7 @@ public class SudokuBoard : MonoBehaviour
     public Material normalMat;
     public Material selectedMat;
     public Material errMat;
+    public Material clueMat;
 
     private GameObject[,] cells;
     private int[,] values;
@@ -49,9 +50,6 @@ public class SudokuBoard : MonoBehaviour
             if ((x + 1) % 3 == 0) { xPos += majorPadding; }
             else { xPos += minorPadding; }
         }
-        generator = new SudokuBacktrackGenerator();
-        solver = new SudokuCspSolver(values);
-        // StartCoroutine(generator.Generate());
     }
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -59,6 +57,40 @@ public class SudokuBoard : MonoBehaviour
     {
         InstantiateCells();
         rules = new SudokuRules(values);
+
+
+        generator = new SudokuBacktrackGenerator();
+        solver = new SudokuCspSolver(values);
+        StartCoroutine(generator.Generate());
+    }
+
+    public void LoadPuzzle()
+    {
+        SetValue(0, 0, 9);
+        SetValue(1, 0, 2);
+        SetValue(2, 0, 6);
+        SetValue(7, 1, 8);
+        SetValue(0, 2, 3);
+        SetValue(3, 3, 1);
+        SetValue(0, 4, 7);
+        SetValue(1, 4, 5);
+        SetValue(4, 4, 2);
+        SetValue(6, 4, 9);
+        SetValue(2, 5, 3);
+        SetValue(3, 5, 5);
+        SetValue(4, 5, 6);
+        SetValue(7, 5, 1);
+        SetValue(0, 6, 2);
+        SetValue(3, 6, 4);
+        SetValue(4, 6, 1);
+        SetValue(6, 6, 5);
+        SetValue(8, 6, 7);
+        SetValue(8, 7, 4);
+        SetValue(2, 8, 5);
+        SetValue(3, 8, 6);
+        SetValue(4, 8, 8);
+        SetValue(8, 8, 3);
+        solver = new SudokuCspSolver(values);
     }
 
     public IEnumerator Solver()
@@ -181,7 +213,7 @@ public class SudokuBoard : MonoBehaviour
         }
         return result;
     }
-    void Update()
+    void FixedUpdate()
     {
         CheckBoardForErrors();
         GetSudokuCell(selectedCell.x, selectedCell.y).SetMaterial(selectedMat);
@@ -190,12 +222,9 @@ public class SudokuBoard : MonoBehaviour
         {
             for (int y = 0; y < 9; y++)
             {
-                for (int v = 1; v < 10; v++)
-                    GetSudokuCell(x, y).SetNoteInactive(v);
-                foreach (int val in solver.constraints.GetDomainValues(x, y))
-                    GetSudokuCell(x, y).SetNoteActive(val);
-                SetValue(x, y, solver.workspace[x, y]);
+                SetValue(x, y, generator.problem[x, y]);
             }
         }
+
     }
 }
