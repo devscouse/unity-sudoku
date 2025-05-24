@@ -1,5 +1,7 @@
 using System;
 using System.Collections;
+using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
 
@@ -15,10 +17,13 @@ public class SudokuBoard : MonoBehaviour
     public Material errMat;
     public Material clueMat;
 
+    [Header("Sudoku Generator Controls")]
+    public int mediumExtraClues;
+    public int easyExtraClues;
+
     private GameObject[,] cells;
     private int[,] values;
     private SudokuRules rules;
-    private SudokuGenerator generator;
     private SudokuCspSolver solver;
     private Vector2Int selectedCell;
 
@@ -57,7 +62,6 @@ public class SudokuBoard : MonoBehaviour
     {
         InstantiateCells();
         rules = new SudokuRules(values);
-        generator = new SudokuGenerator();
     }
 
     public IEnumerator Solver()
@@ -73,8 +77,10 @@ public class SudokuBoard : MonoBehaviour
         StartCoroutine(Solver());
     }
 
-    public IEnumerator Generator()
+    public IEnumerator Generate(int extraClues)
     {
+        ResetBoard();
+        SudokuGenerator generator = new();
         yield return generator.Generate();
         for (int x = 0; x < 9; x++)
         {
@@ -84,11 +90,33 @@ public class SudokuBoard : MonoBehaviour
                 SetClue(x, y, generator.problem[x, y]);
             }
         }
+        List<int> cellIds = Enumerable.Range(0, 80).ToList();
+        cellIds = cellIds.OrderBy(x => Guid.NewGuid()).ToList();
+        int i = 0;
+        while (extraClues > 0)
+        {
+            int cellId = cellIds[i++];
+            int x = cellId / 9;
+            int y = cellId % 9;
+            if (GetValue(x, y) == 0)
+            {
+                SetClue(x, y, generator.solution[x, y]);
+                extraClues--;
+                Debug.Log($"Clue added at {x}, {y}");
+            }
+        }
     }
 
-    public void Generate()
+    public void ResetBoard()
     {
-        StartCoroutine(Generator());
+        for (int x = 0; x < 9; x++)
+        {
+            for (int y = 0; y < 9; y++)
+            {
+                GetSudokuCell(x, y).isClue = false;
+                SetValue(x, y, 0);
+            }
+        }
     }
 
     SudokuCell[] GetSudokuCellRow(int y)
@@ -215,5 +243,17 @@ public class SudokuBoard : MonoBehaviour
     {
         CheckBoardForErrors();
         GetSudokuCell(selectedCell.x, selectedCell.y).SetMaterial(selectedMat);
+    }
+
+    public void Hide()
+    {
+        foreach (SudokuCell cell in GetSudokuCells())
+            cell.GetComponent<MeshRenderer>().enabled = false;
+    }
+
+    public void Show()
+    {
+        foreach (SudokuCell cell in GetSudokuCells())
+            cell.GetComponent<MeshRenderer>().enabled = true;
     }
 }

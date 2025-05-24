@@ -47,15 +47,10 @@ class SudokuCspSolver
 
         Pos pos = constraints.GetEmptyPosWithLeastConstraints();
         List<int> placeableValues = constraints.GetDomainValues(pos.X, pos.Y);
-        Debug.Log($"{pos.X}, {pos.Y} has the smallest domain: {String.Join(" ", placeableValues)}");
 
         foreach (int value in placeableValues)
         {
-            if (!workspaceRules.PlacementIsValid(pos.X, pos.Y, value))
-            {
-                Debug.Log($"Somehow an invalid value is trying to be placed {value} at {pos.X}, {pos.Y}");
-                continue;
-            }
+            if (!workspaceRules.PlacementIsValid(pos.X, pos.Y, value)) { continue; }
             workspace[pos.X, pos.Y] = value;
             constraints.SetValue(pos.X, pos.Y, value);
             yield return Solve();

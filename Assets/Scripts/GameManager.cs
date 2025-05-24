@@ -1,18 +1,51 @@
+using System.Collections;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
     public Camera mainCam;
     public SudokuBoard board;
+    public GameObject titleScreen;
+    public GameObject spinner;
 
+    public int easyExtraClues;
+    public int mediumExtraClues;
+    public int hardExtraClues;
 
     private SudokuCell selectedCell;
+    private bool acceptingInput = false;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
-
+        titleScreen.SetActive(true);
     }
+
+    IEnumerator Generate(int extraClues)
+    {
+        titleScreen.SetActive(false);
+        spinner.SetActive(true);
+        yield return board.Generate(extraClues);
+        spinner.SetActive(false);
+        board.Show();
+        acceptingInput = true;
+    }
+
+    public void GenerateEasyPuzzle()
+    {
+        StartCoroutine(Generate(easyExtraClues));
+    }
+
+    public void GenerateMediumPuzzle()
+    {
+        StartCoroutine(Generate(mediumExtraClues));
+    }
+
+    public void GenerateHardPuzzle()
+    {
+        StartCoroutine(Generate(hardExtraClues));
+    }
+
 
     bool GetInputNumber(out int number)
     {
@@ -35,7 +68,7 @@ public class GameManager : MonoBehaviour
 
     }
 
-    void Update()
+    void ProcessUserInput()
     {
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
@@ -55,6 +88,11 @@ public class GameManager : MonoBehaviour
         {
             board.SetValue(selectedCell.GetX(), selectedCell.GetY(), number);
         }
+    }
+
+    void Update()
+    {
+        if (acceptingInput) { ProcessUserInput(); }
     }
 
 }
