@@ -1,4 +1,5 @@
 using System.Collections;
+using TMPro;
 using UnityEngine;
 
 public class GameManager : MonoBehaviour
@@ -7,6 +8,7 @@ public class GameManager : MonoBehaviour
     public SudokuBoard board;
     public GameObject titleScreen;
     public GameObject spinner;
+    public GameObject timer;
 
     public int easyExtraClues;
     public int mediumExtraClues;
@@ -14,11 +16,13 @@ public class GameManager : MonoBehaviour
 
     private SudokuCell selectedCell;
     private bool acceptingInput = false;
+    private float startTime;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         titleScreen.SetActive(true);
+        timer.SetActive(false);
     }
 
     IEnumerator Generate(int extraClues)
@@ -29,6 +33,8 @@ public class GameManager : MonoBehaviour
         spinner.SetActive(false);
         board.Show();
         acceptingInput = true;
+        startTime = Time.time;
+        timer.SetActive(true);
     }
 
     public void GenerateEasyPuzzle()
@@ -90,9 +96,22 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    void SetTimer()
+    {
+        float timeSinceStart = Time.time - startTime;
+        int minutes = (int)(timeSinceStart / 60);
+        int seconds = (int)(timeSinceStart % 60);
+        string secondsString = seconds.ToString();
+        if (seconds < 10) { secondsString = "0" + secondsString; }
+        string timeString = $"{minutes}:{secondsString}";
+
+        timer.GetComponent<TextMeshProUGUI>().text = timeString;
+    }
+
     void Update()
     {
         if (acceptingInput) { ProcessUserInput(); }
+        SetTimer();
     }
 
 }
