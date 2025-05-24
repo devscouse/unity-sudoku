@@ -14,9 +14,12 @@ public class GameManager : MonoBehaviour
     public int mediumExtraClues;
     public int hardExtraClues;
 
+    public float directionPollDelay;
+
     private SudokuCell selectedCell;
     private bool acceptingInput = false;
     private float startTime;
+    private float directionInputTime;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -74,23 +77,65 @@ public class GameManager : MonoBehaviour
 
     }
 
+    void SelectCell(SudokuCell cell)
+    {
+        selectedCell = cell;
+        board.SetSelectedCell(cell.GetX(), cell.GetY());
+        Debug.Log($"Cell ({selectedCell.GetX()}, {selectedCell.GetY()}) selected");
+    }
+
+    void SelectCell(int x, int y)
+    {
+        SelectCell(board.GetSudokuCell(x, y));
+    }
+
     void ProcessUserInput()
     {
+        float timeSinceDirectionGiven = Time.time - directionInputTime;
+        if (selectedCell == null) { SelectCell(0, 0); }
+
+
         if (Input.GetKeyDown(KeyCode.Mouse0))
         {
             Ray ray = mainCam.ScreenPointToRay(Input.mousePosition);
             Debug.DrawRay(ray.origin, ray.direction * 20, Color.white);
             if (Physics.Raycast(ray, out RaycastHit hit))
             {
-                if (hit.collider.CompareTag("Cell"))
-                {
-                    selectedCell = hit.collider.gameObject.GetComponent<SudokuCell>();
-                    board.SetSelectedCell(selectedCell.GetX(), selectedCell.GetY());
-                    Debug.Log($"Cell ({selectedCell.GetX()}, {selectedCell.GetY()}) selected");
-                }
+                if (!hit.collider.CompareTag("Cell")) { return; }
+                SelectCell(hit.collider.gameObject.GetComponent<SudokuCell>());
             }
         }
-        if (selectedCell != null && GetInputNumber(out int number))
+        else if (timeSinceDirectionGiven > directionPollDelay)
+        {
+            float vInput = Input.GetAxisRaw("Vertical");
+            float hInput = Input.GetAxisRaw("Horizontal");
+
+            if (vInput != 0)
+            {
+                if (vInput > 0 && selectedCell.GetY() < 9)
+                {
+                    SelectCell(selectedCell.GetX(), selectedCell.GetY() + 1);
+                }
+                else if (vInput < 0 && selectedCell.GetY() > 0)
+                {
+                    SelectCell(selectedCell.GetX(), selectedCell.GetY() - 1);
+                }
+                directionInputTime = Time.time;
+            }
+            else if (hInput != 0)
+            {
+                if (hInput > 0 && selectedCell.GetX() < 9)
+                {
+                    SelectCell(selectedCell.GetX() + 1, selectedCell.GetY());
+                }
+                else if (hInput < 0 && selectedCell.GetX() > 0)
+                {
+                    SelectCell(selectedCell.GetX() - 1, selectedCell.GetY());
+                }
+                directionInputTime = Time.time;
+            }
+        }
+        if (GetInputNumber(out int number))
         {
             board.SetValue(selectedCell.GetX(), selectedCell.GetY(), number);
         }

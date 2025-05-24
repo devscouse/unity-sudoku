@@ -157,7 +157,7 @@ public class SudokuBoard : MonoBehaviour
         return square;
     }
 
-    SudokuCell GetSudokuCell(int x, int y)
+    public SudokuCell GetSudokuCell(int x, int y)
     {
         return cells[x, y].GetComponent<SudokuCell>();
     }

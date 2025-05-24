@@ -915,6 +915,7 @@ MonoBehaviour:
   easyExtraClues: 10
   mediumExtraClues: 5
   hardExtraClues: 0
+  directionPollDelay: 0.1
 --- !u!4 &667913718
 Transform:
   m_ObjectHideFlags: 0
