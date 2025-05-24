@@ -248,12 +248,20 @@ public class SudokuBoard : MonoBehaviour
     public void Hide()
     {
         foreach (SudokuCell cell in GetSudokuCells())
+        {
             cell.GetComponent<MeshRenderer>().enabled = false;
+            cell.transform.Find("Canvas").gameObject.SetActive(false);
+        }
     }
 
     public void Show()
     {
         foreach (SudokuCell cell in GetSudokuCells())
+        {
             cell.GetComponent<MeshRenderer>().enabled = true;
+            cell.transform.Find("Canvas").gameObject.SetActive(true);
+        }
     }
+
+    public bool IsSolved() { return rules.IsSolved(); }
 }

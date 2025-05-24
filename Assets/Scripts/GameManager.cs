@@ -7,6 +7,9 @@ public class GameManager : MonoBehaviour
     public Camera mainCam;
     public SudokuBoard board;
     public GameObject titleScreen;
+
+    public GameObject gameOverScreen;
+    public GameObject gameOverEffect;
     public GameObject spinner;
     public GameObject timer;
 
@@ -25,6 +28,9 @@ public class GameManager : MonoBehaviour
     void Start()
     {
         titleScreen.SetActive(true);
+        spinner.SetActive(false);
+        gameOverScreen.SetActive(false);
+        gameOverEffect.SetActive(false);
         timer.SetActive(false);
     }
 
@@ -138,6 +144,19 @@ public class GameManager : MonoBehaviour
         if (GetInputNumber(out int number))
         {
             board.SetValue(selectedCell.GetX(), selectedCell.GetY(), number);
+            if (board.IsSolved())
+            {
+                board.Hide();
+                timer.SetActive(false);
+
+                TextMeshProUGUI timeTakenText = gameOverScreen.transform.Find("TimeTakenText").GetComponent<TextMeshProUGUI>();
+                float timeSinceStart = Time.time - startTime;
+                int minutes = (int)(timeSinceStart / 60);
+                int seconds = (int)(timeSinceStart % 60);
+                timeTakenText.text = $"You solved the puzzle in {minutes} minutes and {seconds} seconds";
+                gameOverScreen.SetActive(true);
+                gameOverEffect.SetActive(true);
+            }
         }
     }
 
@@ -157,6 +176,13 @@ public class GameManager : MonoBehaviour
     {
         if (acceptingInput) { ProcessUserInput(); }
         SetTimer();
+    }
+
+    public void Restart()
+    {
+        gameOverScreen.SetActive(false);
+        gameOverEffect.SetActive(false);
+        titleScreen.SetActive(true);
     }
 
 }
